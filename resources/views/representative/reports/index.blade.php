@@ -6,6 +6,10 @@
 <div class="container main-container">
     <h4 class="mb-4 fw-bold text-center">التقارير</h4>
 
+    @if(session('error'))
+        <div class="alert alert-danger text-center mx-auto" style="max-width: 700px;">{{ session('error') }}</div>
+    @endif
+
     <div class="mx-auto" style="max-width: 700px;">
 
         <a href="{{ route('representative.reports.index') }}?type=all_beneficiaries"
@@ -26,15 +30,18 @@
             <i class="bi bi-download text-primary fs-4"></i>
         </a>
 
-        <div class="report-btn">
+        <form action="{{ route('representative.reports.index') }}" method="GET" class="report-btn">
+            <input type="hidden" name="type" value="family">
             <h5>تقرير العائلة</h5>
             <div class="d-flex align-items-center gap-2">
-                <input type="text" id="familyId"
+                <input type="text" name="national_id_no" id="familyId" required
                     style="border-radius: 19px; border:none; padding: 0px 30px; background-color: rgba(58, 45, 135, 0.11); outline: none;"
                     placeholder="ادخل رقم الهوية" />
-                <i class="bi bi-download text-primary fs-4" style="cursor:pointer"></i>
+                <button type="submit" style="border:none; background:none; cursor:pointer;">
+                    <i class="bi bi-download text-primary fs-4"></i>
+                </button>
             </div>
-        </div>
+        </form>
 
     </div>
 </div>
