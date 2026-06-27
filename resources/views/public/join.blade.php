@@ -199,6 +199,47 @@
             cursor: pointer;
             font-size: 14px;
         }
+
+        .upload-box {
+            border: 1.5px dashed rgba(58, 45, 170, 0.45);
+            border-radius: 14px;
+            padding: 14px;
+            background: #fafaff;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .upload-box:hover {
+            background: #f3f1ff;
+            border-color: var(--main-purple);
+        }
+
+        .upload-title {
+            font-weight: 600;
+            color: #342daa;
+            margin-bottom: 5px;
+        }
+
+        .upload-hint {
+            font-size: 12px;
+            color: #777;
+        }
+
+        .upload-file-name {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #198754;
+            font-weight: 600;
+        }
+
+        .upload-preview {
+            margin-top: 10px;
+            max-width: 120px;
+            max-height: 120px;
+            border-radius: 10px;
+            display: none;
+            object-fit: cover;
+        }
     </style>
 </head>
 
@@ -296,18 +337,32 @@
                 <div class="form-group-custom">
                     <label>صورة الهوية</label>
                     <div class="input-wrapper">
-                        <input type="file" name="national_id_img" id="file1" hidden onchange="updateText(this)">
-                        <i class="fa-solid fa-paperclip" onclick="triggerFile('file1')"></i>
-                        <input type="file" id="file1" hidden onchange="updateText(this)">
+                        <div class="upload-box" onclick="triggerFile('file1')">
+                            <div class="upload-title">
+                                <i class="fa-solid fa-image"></i> اختر صورة الهوية
+                            </div>
+                            <div class="upload-hint">اضغط هنا لاختيار الصورة من جهازك</div>
+                            <div class="upload-file-name" id="file1-name"></div>
+                            <img id="file1-preview" class="upload-preview">
+                        </div>
+
+                        <input type="file" name="national_id_img" id="file1" hidden accept="image/*" onchange="updateFileUI(this, 'file1')">
                     </div>
                 </div>
 
                 <div class="form-group-custom">
                     <label>صورة شخصية</label>
                     <div class="input-wrapper">
-                        <input type="file" name="personal_img" id="file2" hidden onchange="updateText(this)">
-                        <i class="fa-solid fa-paperclip" onclick="triggerFile('file2')"></i>
-                        <input type="file" id="file2" hidden onchange="updateText(this)">
+                        <div class="upload-box" onclick="triggerFile('file2')">
+                            <div class="upload-title">
+                                <i class="fa-solid fa-user"></i> اختر صورة شخصية
+                            </div>
+                            <div class="upload-hint">اضغط هنا لاختيار الصورة من جهازك</div>
+                            <div class="upload-file-name" id="file2-name"></div>
+                            <img id="file2-preview" class="upload-preview">
+                        </div>
+
+                        <input type="file" name="personal_img" id="file2" hidden accept="image/*" onchange="updateFileUI(this, 'file2')">
                     </div>
                 </div>
 
@@ -324,9 +379,15 @@
                 <div class="form-group-custom">
                     <label>ورقة اعتماد مندوب المخيم</label>
                     <div class="input-wrapper">
-                        <input type="file" name="verification_img" id="file3" hidden onchange="updateText(this)">
-                        <i class="fa-solid fa-paperclip" onclick="triggerFile('file3')"></i>
-                        <input type="file" id="file3" hidden onchange="updateText(this)">
+                        <div class="upload-box" onclick="triggerFile('file3')">
+                            <div class="upload-title">
+                                <i class="fa-solid fa-file-arrow-up"></i> اختر ملف الاعتماد
+                            </div>
+                            <div class="upload-hint">اضغط هنا لاختيار الملف من جهازك</div>
+                            <div class="upload-file-name" id="file3-name"></div>
+                        </div>
+
+                        <input type="file" name="verification_img" id="file3" hidden accept="image/*,.pdf" onchange="updateFileUI(this, 'file3')">
                     </div>
                 </div>
 
@@ -433,18 +494,28 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        function savePassword() {
-            alert("تم تغيير كلمة المرور بنجاح");
-            location.reload();
-        }
-
         function triggerFile(id) {
             document.getElementById(id).click();
         }
 
-        function updateText(input) {
-            if (input.files && input.files.length > 0) {
-                input.parentElement.querySelector('input[type="text"]').value = input.files[0].name;
+        function updateFileUI(input, id) {
+            if (!input.files || input.files.length === 0) return;
+
+            const file = input.files[0];
+            const nameBox = document.getElementById(id + '-name');
+            const preview = document.getElementById(id + '-preview');
+
+            nameBox.innerHTML = '✅ تم اختيار الملف: ' + file.name;
+
+            if (preview && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+
+                reader.readAsDataURL(file);
             }
         }
     </script>
