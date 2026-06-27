@@ -12,6 +12,7 @@ use App\Http\Controllers\CommunicationController;
 use App\Http\Controllers\SupporterController;
 use App\Http\Controllers\JoinRequestController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ReportController;
 
 
 // Public صفحات
@@ -44,6 +45,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/requests/{id}', [RequestController::class, 'show'])->name('requests.show');
         Route::post('/requests/{id}/approve', [RequestController::class, 'approve'])->name('requests.approve');
         Route::post('/requests/{id}/reject', [RequestController::class, 'reject'])->name('requests.reject');
+
+        // Reports
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/general', [ReportController::class, 'general'])->name('reports.general');
+        Route::get('/reports/camp/{camp}', [ReportController::class, 'camp'])->name('reports.camp');
+        Route::get('/reports/general/download', [ReportController::class, 'downloadGeneral'])->name('reports.general.download');
+        Route::get('/reports/camp/{camp}/download', [ReportController::class, 'downloadCamp'])->name('reports.camp.download');
 
         // Supporters
         Route::get('/supporters', [SupporterController::class, 'index'])->name('supporters.index');

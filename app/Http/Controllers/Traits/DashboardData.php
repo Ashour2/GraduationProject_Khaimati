@@ -27,6 +27,8 @@ trait DashboardData
             'camps' => Camp::with('representative')->get(),
             'requests' => RegistrationRequest::latest('created_at')->get(),
             'representative' => null,
+            'reportCamps' => collect(),
+            'reportCamp' => null,
         ];
     }
 }

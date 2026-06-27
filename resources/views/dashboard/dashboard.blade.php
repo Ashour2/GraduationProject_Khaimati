@@ -36,8 +36,10 @@
                 class="nav-link {{ (($section ?? '') == 'requests') ? 'active' : '' }}">
                 <i class="bi bi-clock-history"></i> الطلبات
             </a>
-            <div class="nav-link" onclick="showPage('reports', this)"><i class="bi bi-file-earmark-bar-graph"></i>
-                التقارير</div>
+            <a href="{{ route('reports.index') }}"
+                class="nav-link {{ (($section ?? '') == 'reports') ? 'active' : '' }}">
+                <i class="bi bi-file-earmark-bar-graph"></i> التقارير
+            </a>
             <a href="{{ route('supporters.index') }}" class="nav-link {{ (($section ?? '') == 'institutionsSection') ? 'active' : '' }}">
                 <i class="bi bi-building"></i> المؤسسات
             </a>
@@ -1108,22 +1110,125 @@
                 </form>
             </div>
 
-            <div id="reports" class="page-section text-center">
-                <h4 class="mb-5 fw-bold">التقارير</h4>
-                <div class="mx-auto" style="max-width: 400px;">
-                    <select class="form-select form-control-custom" style="background-color: #bdb7e5;">
-                        <option>إنشاء تقرير عام لكل المخيمات</option>
-                    </select>
-                    <select class="form-select form-control-custom" onclick="showPage('report-view')"
-                        style="background-color: #bdb7e5;">
-                        <option>إنشاء تقرير حالة لمخيم محدد</option>
-                    </select>
-                    <button class="btn  rounded-pill px-5 mt-3"
-                        style="color: #3a2d87;background-color: white;padding:  5px 19px; border: 1px solid #bdb7e5;">إنشاء</button>
+            <div id="reports" class="page-section {{ (($section ?? '') == 'reports' && !isset($subsection)) ? 'active' : '' }}">
+                <h4 class="mb-5 fw-bold text-center">التقارير</h4>
+
+                <div class="mx-auto bg-white p-5 rounded-4 shadow-sm" style="max-width: 650px;">
+                    <div class="mb-4">
+                        <label class="mb-2 fw-bold">نوع التقرير</label>
+                        <select id="reportType" class="form-select form-control-custom">
+                            <option value="">اختر نوع التقرير</option>
+                            <option value="general">تقرير عام لكل المخيمات</option>
+                            <option value="camp">تقرير حالة لمخيم محدد</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4" id="campSelectBox" style="display:none;">
+                        <label class="mb-2 fw-bold">اختر المخيم</label>
+                        <select id="campId" class="form-select form-control-custom">
+                            <option value="">اختر المخيم</option>
+                            @foreach($camps as $camp)
+                            <option value="{{ $camp->id }}">{{ $camp->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="text-center">
+                        <button type="button" onclick="generateReport()" class="btn rounded-pill px-5 mt-3"
+                            style="color: #3a2d87;background-color: white;padding: 5px 19px; border: 1px solid #bdb7e5;">
+                            إنشاء
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <div id="report-view" class="page-section text-center ">
+            <div id="general-report" class="page-section {{ (($subsection ?? '') == 'general-report') ? 'active' : '' }}">
+                <h4 class="text-center mb-4 fw-bold">تقرير عام لكل المخيمات</h4>
+
+                <div class="bg-white p-4 rounded-4 shadow-sm mx-auto" style="max-width: 1000px;">
+                    <div class="row text-center mb-4">
+                        <div class="col-md-4">
+                            <h3>{{ ($reportCamps ?? collect())->count() }}</h3>
+                            <p>عدد المخيمات</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h3>{{ ($reportCamps ?? collect())->sum('families_count') }}</h3>
+                            <p>مجموع العائلات</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h3>{{ ($reportCamps ?? collect())->whereNotNull('representative')->count() }}</h3>
+                            <p>عدد المندوبين</p>
+                        </div>
+                    </div>
+
+                    <table class="table text-center align-middle">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>اسم المخيم</th>
+                                <th>المحافظة</th>
+                                <th>العائلات</th>
+                                <th>المندوب</th>
+                                <th>الحالة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach(($reportCamps ?? collect()) as $camp)
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $camp->name }}</td>
+                                <td>{{ $camp->governorate }}</td>
+                                <td>{{ $camp->families_count }}</td>
+                                <td>{{ $camp->representative?->name ?? 'لا يوجد' }}</td>
+                                <td>{{ $camp->status }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+
+                    <div class="text-center mt-4">
+                        <a href="{{ route('reports.general.download') }}" class="btn btn-save">تنزيل PDF</a>
+                        <a href="{{ route('reports.index') }}" class="btn btn-secondary">رجوع</a>
+                    </div>
+                </div>
+            </div>
+
+            <div id="camp-report" class="page-section {{ (($subsection ?? '') == 'camp-report') ? 'active' : '' }}">
+                <h4 class="text-center mb-4 fw-bold">تقرير حالة مخيم</h4>
+
+                @if(isset($reportCamp))
+                <div class="bg-white p-5 rounded-4 shadow-sm mx-auto" style="max-width: 850px;">
+                    <h5 class="fw-bold mb-4 text-center">{{ $reportCamp->name }}</h5>
+
+                    <p><strong>المحافظة:</strong> {{ $reportCamp->governorate }}</p>
+                    <p><strong>العنوان:</strong> {{ $reportCamp->location }}</p>
+                    <p><strong>عدد العائلات:</strong> {{ $reportCamp->families_count }}</p>
+                    <p><strong>الحالة:</strong> {{ $reportCamp->status }}</p>
+
+                    <hr>
+
+                    <h5 class="fw-bold mt-4">مندوب المخيم</h5>
+                    <p><strong>الاسم:</strong> {{ $reportCamp->representative?->name ?? 'لا يوجد مندوب' }}</p>
+                    <p><strong>الهاتف:</strong> {{ $reportCamp->representative?->phone ?? '---' }}</p>
+                    <p><strong>البريد:</strong> {{ $reportCamp->representative?->email ?? '---' }}</p>
+
+                    <hr>
+
+                    <p class="text-muted">
+                        تم إنشاء هذا التقرير بواسطة منصة خيمتي لإدارة المخيمات.
+                    </p>
+
+                    <div class="text-center mt-4">
+                        <a href="{{ route('reports.camp.download', $reportCamp->id) }}" class="btn btn-save"> تنزيل PDF </a>
+                        <a href="{{ route('reports.index') }}" class="btn btn-secondary">رجوع</a>
+                           
+                    </div>
+                </div>
+                @endif
+            </div>
+
+
+            <!-- <div id="report-view" class="page-section text-center ">
                 <h4 class="mb-4 fw-bold">تقرير حالة مخيم الشجاعية - مارس 2025</h4>
                 <p class="mx-auto" style="max-width: 700px; color: #555;">تقرير حالة مخيم الشجاعية - مارس 2025
                     يستعرض هذا التقرير الوضع الحالي لمخيم [اسم المخيم] من حيث عدد المستفيدين المسجلين، الأنشطة المنفذة،
@@ -1134,7 +1239,7 @@
                     لتحسين مستوى الخدمات المقدمة للمستفيدين.
                 </p>
                 <button class="btn btn-save mt-4"><i class="bi bi-download me-2"></i> تنزيل التقرير</button>
-            </div>
+            </div> -->
 
 
             <div id="messages" class="page-section">
@@ -1366,6 +1471,10 @@
             showPage('addSection');
             @elseif(isset($subsection) && $subsection == 'create-data-entry')
             showPage('create-data-entry');
+            @elseif(isset($subsection) && $subsection == 'general-report')
+            showPage('general-report')
+            @elseif(isset($subsection) && $subsection == 'camp-report')
+            showPage('camp-report')
             @elseif(isset($section))
             showPage('{{ $section }}');
             @else
@@ -1389,6 +1498,37 @@
                     row.style.display = 'none';
                 }
             });
+        }
+    </script>
+
+    <script>
+        document.getElementById('reportType')?.addEventListener('change', function() {
+            const campBox = document.getElementById('campSelectBox');
+
+            if (this.value === 'camp') {
+                campBox.style.display = 'block';
+            } else {
+                campBox.style.display = 'none';
+            }
+        });
+
+        function generateReport() {
+            const type = document.getElementById('reportType').value;
+
+            if (type === 'general') {
+                window.location.href = "{{ route('reports.general') }}";
+            }
+
+            if (type === 'camp') {
+                const campId = document.getElementById('campId').value;
+
+                if (!campId) {
+                    alert('يرجى اختيار المخيم');
+                    return;
+                }
+
+                window.location.href = `/dashboard/reports/camp/${campId}`;
+            }
         }
     </script>
 </body>
